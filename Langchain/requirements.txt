@@ -6,4 +6,4 @@ python-dotenv
 ipython
 ipywidgets
 tavily-python
-
+faiss-cpu
