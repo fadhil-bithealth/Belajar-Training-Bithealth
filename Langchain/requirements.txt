@@ -7,3 +7,4 @@ ipython
 ipywidgets
 tavily-python
 faiss-cpu
+langgraph
