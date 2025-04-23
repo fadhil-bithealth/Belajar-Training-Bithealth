@@ -11,3 +11,8 @@ LangLearn/LangGraph_x_Qdrant/.env
 /LangLearn/Typesense/typesense/data
 LangLearn/Typesense/.env
 /LangLearn/Typesense/venv
+/LangLearn/LangGraph_x_Qdrant_miniP/venv
+/LangLearn/Typesense_miniP/venv
+/LangLearn/Typesense_miniP/typesense/data/meta
+/LangLearn/Typesense_miniP/typesense/data/db
+/LangLearn/Typesense_miniP/typesense/data/state
