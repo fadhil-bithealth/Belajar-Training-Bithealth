@@ -1,0 +1,142 @@
+[
+  {
+    "id": "1",
+    "name": "MacBook Pro M2",
+    "description": "Powerful laptop for designers and video editors.",
+    "price": 1999,
+    "category": "laptop"
+  },
+  {
+    "id": "2",
+    "name": "Acer Swift 3",
+    "description": "Lightweight laptop for everyday use.",
+    "price": 699,
+    "category": "laptop"
+  },
+  {
+    "id": "3",
+    "name": "Dell XPS 13",
+    "description": "Compact and premium ultrabook.",
+    "price": 1099,
+    "category": "laptop"
+  },
+  {
+    "id": "4",
+    "name": "HP Spectre x360",
+    "description": "Convertible laptop with touch screen.",
+    "price": 1249,
+    "category": "laptop"
+  },
+  {
+    "id": "5",
+    "name": "Asus ROG Zephyrus",
+    "description": "Gaming laptop with high refresh rate display.",
+    "price": 1599,
+    "category": "laptop"
+  },
+  {
+    "id": "6",
+    "name": "Lenovo ThinkPad X1 Carbon",
+    "description": "Business laptop with legendary keyboard.",
+    "price": 1399,
+    "category": "laptop"
+  },
+  {
+    "id": "7",
+    "name": "MSI Stealth 16",
+    "description": "Slim gaming laptop with RTX graphics.",
+    "price": 1799,
+    "category": "laptop"
+  },
+  {
+    "id": "8",
+    "name": "Huawei MateBook X Pro",
+    "description": "Elegant laptop with excellent display.",
+    "price": 1299,
+    "category": "laptop"
+  },
+  {
+    "id": "9",
+    "name": "Microsoft Surface Laptop 5",
+    "description": "Stylish laptop with touchscreen support.",
+    "price": 1299,
+    "category": "laptop"
+  },
+  {
+    "id": "10",
+    "name": "Razer Blade 15",
+    "description": "Premium gaming laptop with aluminum chassis.",
+    "price": 2199,
+    "category": "laptop"
+  },
+  {
+    "id": "11",
+    "name": "Asus Vivobook 15",
+    "description": "Budget laptop with sleek design.",
+    "price": 549,
+    "category": "laptop"
+  },
+  {
+    "id": "12",
+    "name": "LG Gram 17",
+    "description": "Ultra-lightweight laptop with large display.",
+    "price": 1599,
+    "category": "laptop"
+  },
+  {
+    "id": "13",
+    "name": "Acer Aspire 5",
+    "description": "Affordable laptop for students.",
+    "price": 499,
+    "category": "laptop"
+  },
+  {
+    "id": "14",
+    "name": "Samsung Galaxy Book3 Pro",
+    "description": "Premium ultrabook with AMOLED display.",
+    "price": 1399,
+    "category": "laptop"
+  },
+  {
+    "id": "15",
+    "name": "Framework Laptop",
+    "description": "Modular laptop for tinkerers and upgraders.",
+    "price": 1049,
+    "category": "laptop"
+  },
+  {
+    "id": "16",
+    "name": "Alienware x14",
+    "description": "Compact gaming laptop with futuristic design.",
+    "price": 1899,
+    "category": "laptop"
+  },
+  {
+    "id": "17",
+    "name": "TUXEDO Pulse 15",
+    "description": "Linux-powered laptop with AMD CPU.",
+    "price": 1249,
+    "category": "laptop"
+  },
+  {
+    "id": "18",
+    "name": "Chuwi HeroBook Pro",
+    "description": "Entry-level laptop with long battery life.",
+    "price": 259,
+    "category": "laptop"
+  },
+  {
+    "id": "19",
+    "name": "Google Pixelbook Go",
+    "description": "Premium Chromebook with ultra-portable design.",
+    "price": 849,
+    "category": "laptop"
+  },
+  {
+    "id": "20",
+    "name": "Dynabook Tecra A40",
+    "description": "Reliable business laptop with robust features.",
+    "price": 949,
+    "category": "laptop"
+  }
+]

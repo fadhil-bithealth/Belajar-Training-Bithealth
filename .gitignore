@@ -1,3 +1,13 @@
 Prompting-Langchain/.env
 Langchain/.env
 /Langchain/venv
+Langchain-Concept Understanding/.env
+/Langchain-Concept Understanding/faiss_index
+/Langchain-Concept Understanding/venv
+/Langchain/faiss_index
+LangLearn/LangGraph_x_Qdrant/.env
+/LangLearn/LangGraph_x_Qdrant/venv
+/LangLearn/Typesense/typesense/data/db
+/LangLearn/Typesense/typesense/data
+LangLearn/Typesense/.env
+/LangLearn/Typesense/venv

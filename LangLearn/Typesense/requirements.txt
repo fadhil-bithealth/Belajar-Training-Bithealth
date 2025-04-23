@@ -1,0 +1,13 @@
+langchain
+langgraph
+langchain-community
+qdrant-client
+python-dotenv
+langchain-google-genai
+google-generativeai
+ipywidgets
+langchain
+langgraph
+langchain-community
+langchain-core
+typesense
