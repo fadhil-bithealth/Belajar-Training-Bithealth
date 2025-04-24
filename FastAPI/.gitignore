@@ -1,0 +1,8 @@
+env
+__pycache__
+logs
+local
+.env
+*.local
+embeddings_cache
+.DS_Store

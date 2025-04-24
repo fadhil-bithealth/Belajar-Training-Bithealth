@@ -16,3 +16,17 @@ LangLearn/Typesense/.env
 /LangLearn/Typesense_miniP/typesense/data/meta
 /LangLearn/Typesense_miniP/typesense/data/db
 /LangLearn/Typesense_miniP/typesense/data/state
+/FastAPI/venv
+/Project 1 - Training/__pycache__
+/Project 1 - Training/agents/__pycache__
+/Project 1 - Training/router/__pycache__
+/Project 1 - Training/venv
+/Project-T1-MedPack - NoLG/venv
+/Project-T1-Medpack-FastAPI/venv
+/Project-T1-MedPack/app/__pycache__
+/Project-T1-MedPack/venv
+/Project 1 - Training/core
+*.pyc
+Project 1 - Training/.env
+Project-T1-MedPack - NoLG/.env
+Project-T1-MedPack/.env
