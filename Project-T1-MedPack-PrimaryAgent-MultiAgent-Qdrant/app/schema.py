@@ -24,4 +24,5 @@ class FinalOutput(BaseModel):
     quantity: Optional[int] = None
     batch_number: Optional[str] = None
     expiry_date: Optional[str] = None
+    #is_anomaly: Optional[bool] = False
 
