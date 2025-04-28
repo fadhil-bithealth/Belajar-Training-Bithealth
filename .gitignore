@@ -40,3 +40,7 @@ Project-T1-MedPack/.env
 /Project-T1-MedPack-PrimaryAgent-MultiAgent/venv
 /Project-T1-MedPack-PrimaryAgent-MultiAgent/Dataset
 *.JPG
+Project-T1-MedPack-PrimaryAgent-MultiAgent-Qdrant/.env
+Project-T1-MedPack-PrimaryAgent-MultiAgent-Qdrant/.env
+Project-T1-MedPack-PrimaryAgent-MultiAgent-Qdrant/.env
+/Project-T1-MedPack-PrimaryAgent-MultiAgent-Qdrant
