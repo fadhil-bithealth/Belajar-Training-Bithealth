@@ -33,3 +33,10 @@ Project-T1-MedPack/.env
 /Project-T1-MedPack-1Agent-FastAPI/venv
 /Project-T1-MedPack-CobaAPI/venv
 /Project-T1-Medpack-NoLG-FastAPI/venv
+/Project-T1-MedPack- Primary x LG/venv
+/Project-T1-MedPack-PrimaryAgent-MultiAgent-Qdrant/medpack/Lib
+/Project-T1-MedPack-PrimaryAgent-MultiAgent-Qdrant/medpack
+/Project-T1-MedPack-PrimaryAgent-MultiAgent-Qdrant/venv
+/Project-T1-MedPack-PrimaryAgent-MultiAgent/venv
+/Project-T1-MedPack-PrimaryAgent-MultiAgent/Dataset
+*.JPG

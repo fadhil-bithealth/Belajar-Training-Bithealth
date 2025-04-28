@@ -45,3 +45,29 @@ final_output_prompt = (
     "You are formatting the final output. Given anomaly check and detection data, generate this format:\n\n"
     + final_parser.get_format_instructions()
 )
+
+batch_expiry_prompt = """
+You are an AI specialized in reading Batch Number and Expiry Date from medicine packaging images.
+
+Given the images that are suspected to contain batch and expiry information:
+- Extract the batch number.
+- Extract the expiry date.
+
+Respond ONLY in JSON format like this:
+{
+  "batch_number": "batch_number_here",
+  "expiry_date": "expiry_date_here"
+}
+"""
+
+quantity_prompt = """
+You are an AI specialized in counting the quantity of medicine units from images.
+
+Given the images that show the amount of the medicine:
+- Count how many medicine units/packages there are.
+
+Respond ONLY in JSON format like this:
+{
+  "item_quantity": number
+}
+"""

@@ -40,7 +40,7 @@ class AppController:
                 detail="An error occurred while processing the images."
             )
 
-        result = pipelineController.run_pipeline(pil_images)
+        result = await pipelineController.run_pipeline(pil_images)
         return result
 
 appController = AppController()

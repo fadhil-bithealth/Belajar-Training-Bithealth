@@ -10,7 +10,7 @@ class DetectionResult(BaseModel):
     item_name: str
 
 class FinalOutput(BaseModel):
-    is_anomaly: bool
-    batch_and_expiry_image: Optional[List[int]] = []
-    quantity_detection_images: Optional[List[int]] = []
-    item_name: Optional[str] = None
+    item_name: str
+    batch_number: str
+    expiry_date: str
+    item_quantity: int
