@@ -9,6 +9,7 @@ from app.schemas.response_schema import FinalOutput
 # Build the LangGraph once
 graph = build_graph()
 
+# encode gambar jadi string base64
 def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
     image_inputs = []
     for img in pil_images:

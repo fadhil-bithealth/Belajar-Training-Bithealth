@@ -1,0 +1,8 @@
+pydantic
+fastapi
+pydantic-settings
+uvicorn
+langchain-google-genai
+langgraph
+Pillow
+python-multipart

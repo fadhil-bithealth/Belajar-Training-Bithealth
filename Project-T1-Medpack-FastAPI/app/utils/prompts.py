@@ -11,7 +11,14 @@ Given one or more images:
    - Expiry Date
    - Item Name and description below
 3. Check that all images depict only one kind of medicine. If an image contains multiple medicines, or different medicines across images, it's an anomaly.
+4. All images combined should provide:
+   - Batch Number
+   - Expiry Date
+   - Item Name and description below
+   - ml or mg value
+5. If any of the above is missing, it's an anomaly.
 
+If no image includes the Batch Number and Expiry Date, set is_anomaly to true.
 Reply only in JSON:
 {
   "is_anomaly": true or false

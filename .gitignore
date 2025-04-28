@@ -30,3 +30,6 @@ LangLearn/Typesense/.env
 Project 1 - Training/.env
 Project-T1-MedPack - NoLG/.env
 Project-T1-MedPack/.env
+/Project-T1-MedPack-1Agent-FastAPI/venv
+/Project-T1-MedPack-CobaAPI/venv
+/Project-T1-Medpack-NoLG-FastAPI/venv

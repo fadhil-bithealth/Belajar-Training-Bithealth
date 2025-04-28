@@ -7,11 +7,18 @@ from app.schemas.response_schema import AnomalyResult, DetectionResult, FinalOut
 
 def run_anomaly_check(images) -> AnomalyResult:
     messages = [HumanMessage(content=[
-        {"type": "text", "text": anomaly_check_prompt}] + images)]
+        {"type": "text", "text": anomaly_check_prompt}
+    ] + images)]
     
     response = llm.invoke(messages)
     parsed = anomaly_parser.parse(response.content)
-    return AnomalyResult(**parsed)
+    result = AnomalyResult(**parsed)
+
+    detection_result: DetectionResult = run_image_detection(images)
+    if not detection_result.batch_and_expiry_image:
+        result.is_anomaly = True
+
+    return result
 
 def run_image_detection(images) -> DetectionResult:
     messages = [HumanMessage(content=[

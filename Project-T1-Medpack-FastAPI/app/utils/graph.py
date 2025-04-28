@@ -2,7 +2,6 @@
 
 from langgraph.graph import StateGraph, END, START
 from langchain_core.runnables import RunnableLambda
-#from app.utils.kernel import run_anomaly_check, run_image_detection, run_output_formatting
 from app.utils.agent import run_anomaly_check, run_image_detection, run_output_formatting
 from app.schemas.response_schema import AnomalyResult, DetectionResult, FinalOutput
 from typing import TypedDict, List
