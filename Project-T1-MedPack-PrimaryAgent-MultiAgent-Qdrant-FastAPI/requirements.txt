@@ -1,0 +1,15 @@
+langchain
+langchain_google_genai
+langgraph
+pydantic
+fastapi
+uvicorn
+python-multipart
+Pillow
+python-dotenv
+pandas
+numpy
+qdrant-client
+Scikit-learn
+pydantic-settings
+ipykernel 

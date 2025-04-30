@@ -1,23 +1,22 @@
-from app.agent import (
+from app.controller.AgentController import (
     run_anomaly_check,
     run_image_detection,
     run_output_formatting,
     run_batch_and_expiry_agent,
     run_quantity_agent
 )
-from app.schema import (FinalOutput, ItemMatch)
+from app.schemas.schemas import FinalOutput
 from PIL import Image
 from typing import List
 import base64
 import io
 import os
 import pandas as pd
-from app.parser import output_parser
+from app.utils.HttpResponseUtils import response_success, response_error
 from langgraph.graph import StateGraph
 from typing import TypedDict, Annotated
 from qdrant_client import QdrantClient
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from app.HttpResponseUtils import response_success, response_error
 
 # --- Qdrant & Embedding Setup ---
 client = QdrantClient(host='localhost', port=6333)
@@ -78,7 +77,6 @@ def quantity_node(state: GraphState):
 
 def output_node(state: GraphState):
     anomaly = state.get("anomaly_result", False)
-
     if anomaly:
         # --- Jika anomaly, keluarkan kosong dan is_anomaly = True ---
         return FinalOutput(
@@ -138,14 +136,10 @@ graph_pipeline = graph.compile()
 
 # --- Dataset Load ---
 #df = pd.read_csv("Dataset/drugs_items_filtered.csv")
-from typing import List, Optional
-from pydantic import BaseModel # type: ignore
-from langchain.output_parsers import PydanticOutputParser
-from app.config import llm, embedding_model
-from app.HttpResponseUtils import response_success, response_error
+
 # --- Main Runner ---
 def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
-    try: 
+    try:
         image_inputs = []
         for img in pil_images:
             buf = io.BytesIO()
@@ -174,80 +168,35 @@ def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
                     is_anomaly=True)   
                 )    
             except Exception as e:
-                return response_error(e)        
+                return response_error(e)    
 
         # Jika tidak anomaly, cari item_id dari item_name
         item_name = result.get("detection_result", {}).get("item_name", None)
-        print("Item Name:", item_name)
         
-        ################ RAG #######################
         if item_name:
             item_name_embedding = embedding_model.embed_query(item_name)
             search_result = client.search(
                 collection_name="item_collection",
                 query_vector=item_name_embedding,
-                limit=15
+                limit=1
             )
-            # Step 3: Ambil item_name dan item_code dari hasil pencarian
-            results = []
-    # Step 1: Define schema as a class
-            for hit in search_result:
-                payload = hit.payload
-                item_name = payload.get("item_name", "Unknown")
-                item_code = payload.get("item_code", "Unknown")
-                results.append({"item_name": item_name, "item_code": item_code})
-            
-            print("Search Results:", search_result)
-
-            # Format list of items
-            item_list_str = "\n".join([
-                f"{i+1}. {item['item_name']} (item_code: {item['item_code']})"
-                for i, item in enumerate(results)
-            ])
-
-            print("Item List String:", item_list_str)
-
-            # Step 3: Build the prompt
-            prompt = f"""
-Given the following user query and a list of inventory items, your task is to find the item that best matches the user's query.
-
-Instructions:
-
-1. Match the item that is most relevant to the query, based on the item name.
-2. Usually the name is the first word in the item name
-3. The details are about injection, tablet, syrup, etc.
-4. Return only one item with the closest match.
-5. Respond strictly in JSON format as shown below.
-
-{output_parser.get_format_instructions()}
-
-### User Query:
-{item_name}
-
-### List of Retrieved Items (from vector search):
-{item_list_str}
-
-### Your Answer:
-"""
-
-            # Step 4: Invoke LLM and parse output
-            response = llm.invoke(prompt)
-            parsed = output_parser.parse(response.content)
-            hasil = parsed.model_dump() 
-            final_output_data["item_name"] = hasil['item_name']
-            final_output_data["item_id"] = hasil['item_code']
-
-    
+            if search_result and search_result[0].payload.get("item_code"):
+                final_output_data["item_id"] = search_result[0].payload["item_code"]
+                final_output_data["item_name"] = search_result[0].payload.get("item_name", item_name)
+            else:
+                final_output_data["item_id"] = None
+                final_output_data["item_name"] = item_name  # fallback ke input
         else:
             final_output_data["item_id"] = None
-
-        final_output_data["item_name"] = hasil['item_name']
+            final_output_data["item_name"] = None
+        
+        final_output_data["item_name"] = search_result[0].payload.get("item_name", item_name)
         final_output_data["quantity"] = result.get("quantity_result", None)
         final_output_data["batch_number"] = result.get("batch_and_expiry_result", {}).get("batch_number", None)
         final_output_data["expiry_date"] = result.get("batch_and_expiry_result", {}).get("expiry_date", None)
 
         print("Final Output:", final_output_data)
 
-        return response_success(final_output_data)
+        return response_success(FinalOutput(**final_output_data).model_dump())
     except Exception as e:
             return response_error(e)

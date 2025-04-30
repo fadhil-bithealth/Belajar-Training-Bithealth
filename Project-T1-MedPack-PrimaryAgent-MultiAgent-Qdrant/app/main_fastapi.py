@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from typing import List
-from app.pipeline import run_pipeline
+from app.pipeline_llm_rag_agent import run_pipeline
 from app.schema import FinalOutput
 from PIL import Image
 import io
@@ -35,10 +35,10 @@ async def process_images(images: List[UploadFile] = File(...)):
             pil_image = Image.open(io.BytesIO(content)).convert("RGB")
             pil_images.append(pil_image)
         
-        # Tambahkan tracing di sini
-        with tracing_v2_enabled(project_name=LANGSMITH_PROJECT):
+        # # Tambahkan tracing di sini
+        # with tracing_v2_enabled(project_name=LANGSMITH_PROJECT):
+        #     result = run_pipeline(pil_images)
             result = run_pipeline(pil_images)
-        
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"ERROR NO IMAGES UPLOADED or Internal server error: {str(e)}")

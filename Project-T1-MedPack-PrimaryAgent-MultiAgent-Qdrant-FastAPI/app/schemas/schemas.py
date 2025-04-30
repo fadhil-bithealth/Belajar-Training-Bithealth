@@ -26,7 +26,3 @@ class FinalOutput(BaseModel):
     expiry_date: Optional[str] = None
     #is_anomaly: Optional[bool] = False
 
-
-class ItemMatch(BaseModel):
-    item_name: Optional[str] = None
-    item_code: Optional[str] = None

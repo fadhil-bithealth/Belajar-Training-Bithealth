@@ -1,13 +1,12 @@
 # app/parser.py
 
 from langchain_core.output_parsers import JsonOutputParser  # type: ignore
-from app.schema import (
+from app.schemas.schemas import (
     AnomalyResult, 
     DetectionResult, 
     FinalOutput,
     BatchAndExpiryResult,  # tambahkan
-    QuantityResult,
-    ItemMatch         # tambahkan
+    QuantityResult          # tambahkan
 )
 
 anomaly_parser = JsonOutputParser(pydantic_object=AnomalyResult)
@@ -17,4 +16,3 @@ final_parser = JsonOutputParser(pydantic_object=FinalOutput)
 # Tambahan baru:
 batch_and_expiry_parser = JsonOutputParser(pydantic_object=BatchAndExpiryResult)
 quantity_parser = JsonOutputParser(pydantic_object=QuantityResult)
-output_parser = JsonOutputParser(pydantic_object=ItemMatch)

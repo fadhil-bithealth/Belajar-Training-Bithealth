@@ -43,6 +43,23 @@ class AgentController:
         response = self.llm.invoke(messages)
         parsed = final_parser.parse(response.content)
         return FinalOutput(**parsed)
+    
+    def run_combined_detection_agent(images: List[dict]):
+    anomaly_result = run_anomaly_check(images)
+    detection_result = run_image_detection(images)
+
+    is_anomaly = anomaly_result.is_anomaly
+    if (
+        not detection_result.item_name or
+        not detection_result.batch_and_expiry_image or
+        not detection_result.quantity_detection_images
+    ):
+        is_anomaly = True
+
+    return {
+        "anomaly_result": is_anomaly,
+        "detection_result": detection_result.model_dump() if not is_anomaly else {}
+    }
 
 
 # Build LLM untuk agentController

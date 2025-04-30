@@ -1,30 +1,35 @@
-from app.agent import (
+from app.controller.AgentController import (
     run_anomaly_check,
     run_image_detection,
     run_output_formatting,
     run_batch_and_expiry_agent,
     run_quantity_agent
 )
-from app.schema import (FinalOutput, ItemMatch)
+from app.schemas.schemas import FinalOutput
 from PIL import Image
 from typing import List
 import base64
 import io
 import os
 import pandas as pd
-from app.parser import output_parser
+
 from langgraph.graph import StateGraph
 from typing import TypedDict, Annotated
 from qdrant_client import QdrantClient
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from app.HttpResponseUtils import response_success, response_error
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from app.utils.HttpResponseUtils import response_success, response_error
+GOOGLE_API_KEY= "AIzaSyDpMoHGyPSy6hFkjr4i3eXsOPGVa1-GD90"
 
 # --- Qdrant & Embedding Setup ---
 client = QdrantClient(host='localhost', port=6333)
 embedding_model = GoogleGenerativeAIEmbeddings(
     model="models/embedding-001",
-    google_api_key=os.getenv("GOOGLE_API_KEY")
-)
+    google_api_key=GOOGLE_API_KEY)
+
+
+llm = ChatGoogleGenerativeAI(
+    model="models/gemini-2.0-flash",
+    google_api_key=GOOGLE_API_KEY)
 
 # --- Graph State ---
 class GraphState(TypedDict):
@@ -107,25 +112,67 @@ def output_node(state: GraphState):
 
     return final_dict
 
+def run_combined_detection_agent(images: List[dict]):
+    anomaly_result = run_anomaly_check(images)
+    detection_result = run_image_detection(images)
+
+    is_anomaly = anomaly_result.is_anomaly
+    if (
+        not detection_result.item_name or
+        not detection_result.batch_and_expiry_image or
+        not detection_result.quantity_detection_images
+    ):
+        is_anomaly = True
+
+    return {
+        "anomaly_result": is_anomaly,
+        "detection_result": detection_result.model_dump() if not is_anomaly else {}
+    }
+
+def combined_detection_node(state: GraphState):
+    images = state["images"]
+    result = run_combined_detection_agent(images)
+    return result
+
+# --- Graph Building ---
+# graph = StateGraph(GraphState)
+
+# graph.add_node("anomaly_check", anomaly_node)
+# graph.add_node("detection", detection_node)
+# graph.add_node("batch_and_expiry", batch_and_expiry_node)
+# graph.add_node("quantity", quantity_node)
+# graph.add_node("output", output_node)
+
+# graph.set_entry_point("anomaly_check")
+
+# # --- CONDICIONAL FLOW ---
+# graph.add_conditional_edges(
+#     "anomaly_check",
+#     lambda state: "output" if state["anomaly_result"] else "detection"
+# )
+
+# graph.add_conditional_edges(
+#     "detection",
+#     lambda state: "output" if state["anomaly_result"] else "batch_and_expiry"
+# )
+
+# graph.add_edge("batch_and_expiry", "quantity")
+# graph.add_edge("quantity", "output")
+
+# graph.set_finish_point("output")
+
 # --- Graph Building ---
 graph = StateGraph(GraphState)
 
-graph.add_node("anomaly_check", anomaly_node)
-graph.add_node("detection", detection_node)
+graph.add_node("combined_detection", combined_detection_node)
 graph.add_node("batch_and_expiry", batch_and_expiry_node)
 graph.add_node("quantity", quantity_node)
 graph.add_node("output", output_node)
 
-graph.set_entry_point("anomaly_check")
-
-# --- CONDICIONAL FLOW ---
-graph.add_conditional_edges(
-    "anomaly_check",
-    lambda state: "output" if state["anomaly_result"] else "detection"
-)
+graph.set_entry_point("combined_detection")
 
 graph.add_conditional_edges(
-    "detection",
+    "combined_detection",
     lambda state: "output" if state["anomaly_result"] else "batch_and_expiry"
 )
 
@@ -141,8 +188,7 @@ graph_pipeline = graph.compile()
 from typing import List, Optional
 from pydantic import BaseModel # type: ignore
 from langchain.output_parsers import PydanticOutputParser
-from app.config import llm, embedding_model
-from app.HttpResponseUtils import response_success, response_error
+#from app.config import llm, embedding_model
 # --- Main Runner ---
 def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
     try: 
@@ -179,14 +225,13 @@ def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
         # Jika tidak anomaly, cari item_id dari item_name
         item_name = result.get("detection_result", {}).get("item_name", None)
         print("Item Name:", item_name)
-        
         ################ RAG #######################
         if item_name:
             item_name_embedding = embedding_model.embed_query(item_name)
             search_result = client.search(
                 collection_name="item_collection",
                 query_vector=item_name_embedding,
-                limit=15
+                limit=10
             )
             # Step 3: Ambil item_name dan item_code dari hasil pencarian
             results = []
@@ -199,6 +244,13 @@ def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
             
             print("Search Results:", search_result)
 
+            class ItemMatch(BaseModel):
+                item_name: Optional[str] = None
+                item_code: Optional[str] = None
+
+            # Step 2: Create output parser
+            output_parser = PydanticOutputParser(pydantic_object=ItemMatch)
+
             # Format list of items
             item_list_str = "\n".join([
                 f"{i+1}. {item['item_name']} (item_code: {item['item_code']})"
@@ -209,15 +261,30 @@ def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
 
             # Step 3: Build the prompt
             prompt = f"""
-Given the following user query and a list of inventory items, your task is to find the item that best matches the user's query.
+You are a product classifier AI. Your task is to find the most relevant inventory item based on the user's query about a medical product.
 
 Instructions:
+1. Match the item that best corresponds to the query, focusing primarily on the item name.
+2. The name is usually the first word in the product (e.g., NARFOZ, PARACETAMOL).
+3. Pay close attention to the milligram (mg), volume (ml), and item form (e.g., Injection, Tablet, Syrup). For example, 4MG/2ML means 4mg in 2ml.
+4. Avoid selecting items with "/in" or "/js" in the name, as these may refer to grouped insurance names (e.g., inhealth, bpjs). If only one such item exists, it's acceptable.
+5. Return only **one** item with the closest match from the list.
+Example Query:
+"NARFOZ Ondansetron HCl dihydrate 8 mg / 4 ml Injection"
 
-1. Match the item that is most relevant to the query, based on the item name.
-2. Usually the name is the first word in the item name
-3. The details are about injection, tablet, syrup, etc.
-4. Return only one item with the closest match.
-5. Respond strictly in JSON format as shown below.
+Available Items:
+1. NARFOZ 8MG TAB (item_code: LVD00966)
+2. NARFOZ 4MG/5ML-60ML SYR (item_code: DN00131R)
+3. NARFOZ 4MG TAB (item_code: LVD00964)
+4. NARFOZ 4MG/5ML-30ML SYR (item_code: LVD00965)
+5. NARFOZ 4MG (HO) (item_code: COV00110)
+6. NELANDOZ 2MG TAB (item_code: D0000045)
+7. FARNELTIK 200MG TAB COV (DONASI) (item_code: KJD01199)
+8. NARFOZ 8MG/4ML INJ (item_code: LVD00967)
+9. NAROPIN 0,75% 150MG/20ML PDF (item_code: D11247)
+10. NARFOZ 4MG/2ML INJ (item_code: D10678)
+
+Your task: From the list, select the one item that best matches the query and return only its name and code in JSON.
 
 {output_parser.get_format_instructions()}
 

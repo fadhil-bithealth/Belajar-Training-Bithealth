@@ -1,31 +1,40 @@
-# app/agent.py
+# app/controller/AgentController.py
 
-from langchain_core.messages import HumanMessage # type: ignore
-from app.prompts import (
+from langchain_core.messages import HumanMessage  # type: ignore
+from app.utils.prompts import (
     anomaly_check_prompt, 
     image_detection_prompt, 
     final_output_prompt,
-    batch_expiry_prompt,  # tambahkan
-    quantity_prompt           # tambahkan
+    batch_expiry_prompt,
+    quantity_prompt
 )
-from app.parser import (
+from app.utils.parser import (
     anomaly_parser, 
     detection_parser, 
     final_parser,
-    batch_and_expiry_parser,  # tambahkan
-    quantity_parser,
-    output_parser           # tambahkan
+    batch_and_expiry_parser,
+    quantity_parser
 )
-from app.config import llm
-from app.schema import (
+from app.controller.AppController import appController
+from app.schemas.schemas import (
     AnomalyResult, 
     DetectionResult, 
     FinalOutput,
-    BatchAndExpiryResult,     # tambahkan
-    QuantityResult ,
-    ItemMatch           # tambahkan
+    BatchAndExpiryResult,
+    QuantityResult
+)
+from qdrant_client import QdrantClient
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+import os
+
+# Inisialisasi Qdrant & Embedding Model
+client = QdrantClient(host="localhost", port=6333)
+embedding_model = GoogleGenerativeAIEmbeddings(
+    model="models/embedding-001",
+    google_api_key=os.getenv("GOOGLE_API_KEY"),
 )
 
+llm = appController.llm
 def run_anomaly_check(images) -> AnomalyResult:
     messages = [HumanMessage(content=[
         {"type": "text", "text": anomaly_check_prompt}] + images)]
@@ -80,3 +89,4 @@ def run_quantity_agent(images) -> QuantityResult:
     response = llm.invoke(messages)
     parsed = quantity_parser.parse(response.content)
     return QuantityResult(**parsed)
+

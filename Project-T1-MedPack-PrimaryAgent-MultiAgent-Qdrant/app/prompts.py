@@ -46,13 +46,15 @@ batch_expiry_prompt = """
 You are an expert AI that reads batch number and expiry date from a medicine image.
 
 Given the image(s), extract:
-- Batch Number
-- Expiry Date
+- Batch Number | Batch No | Lot Number
+- Expiry Date | Expiry | Exp | Exp. Date | Expires on | Use by
+- Date of Expiry | Best Before | Best Before End
 
+If there is no date, return the DD as 01
 Reply in JSON:
 {
   "batch_number": "string",
-  "expiry_date": "string"
+  "expiry_date": "string" With format DD/MM/YYYY
 }
 """
 
@@ -66,4 +68,49 @@ Reply in JSON:
 {
   "quantity": int
 }
+"""
+
+rag_prompt = """
+Given the following user query and a list of inventory items, your task is to find the item that best matches the user's query.
+
+Instructions:
+1. Match the item that is most relevant to the query, based on the item name.
+2. The main drug name typically appears at the **start** of the item name.
+3. The details in the item name usually include additional information such as form (e.g., tablet, injection, syrup, etc.).
+4. Return **only one item** that best matches the user's query based on the available items.
+5. Respond strictly in JSON format as shown below.
+
+{output_parser.get_format_instructions()}
+
+### User Query:
+{item_name}
+
+### List of Retrieved Items (from vector search):
+{item_list_str}
+
+### Your Answer:
+"""
+
+# prompts/item_selection_prompt.py
+
+def get_item_selection_prompt(item_name: str, item_list_str: str, output_parser) -> str:
+    return f"""
+You are a product classifier AI. Your task is to find the most relevant inventory item based on the user's query about a medical product.
+
+Instructions:
+1. Match the item that best corresponds to the query, focusing primarily on the item name.
+2. The name is usually the first word in the product (e.g., NARFOZ, PARACETAMOL).
+3. Pay close attention to the milligram (mg), volume (ml), and item form (e.g., Injection, Tablet, Syrup). For example, 4MG/2ML means 4mg in 2ml.
+4. Avoid selecting items with "/in" or "/js" in the name, as these may refer to grouped insurance names (e.g., inhealth, bpjs). If only one such item exists, it's acceptable.
+5. Return only **one** item with the closest match from the list.
+
+{output_parser.get_format_instructions()}
+
+### User Query:
+{item_name}
+
+### List of Retrieved Items (from vector search):
+{item_list_str}
+
+### Your Answer:
 """
