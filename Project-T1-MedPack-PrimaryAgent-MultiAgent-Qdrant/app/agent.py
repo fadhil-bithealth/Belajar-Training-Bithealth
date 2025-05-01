@@ -18,7 +18,7 @@ from app.parser import (
     quantity_parser,
     output_parser           # tambahkan
 )
-from app.config import llm
+from app.config import llm,llm_detection_image
 from app.schema import (
     AnomalyResult, 
     DetectionResult, 

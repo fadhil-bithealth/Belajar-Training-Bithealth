@@ -1,7 +1,7 @@
 # app/prompts.py
 
 from app.parser import final_parser
-anomaly_check_prompt = """
+anomaly_check_prompt2 = """
 You are an AI that reviews medicine packaging images.
 
 Given one or more images:
@@ -9,8 +9,26 @@ Given one or more images:
 2. Check if the combination of images provides:
    - Batch Number
    - Expiry Date
-   - Item Name and description below
+   - Item Name (the usually big text) and description (small text) its below
 3. Check that all images depict only one kind of medicine. If an image contains multiple medicines, or different medicines across images, it's an anomaly.
+
+Reply only in JSON:
+{
+  "is_anomaly": true or false
+}
+"""
+
+anomaly_check_prompt = """
+You are an AI that reviews medicine packaging images.
+
+Given one or more images:
+
+1. Check if each image likely shows a medicine product (e.g., box, bottle, blister, etc.).
+2. See if the combined images show:
+   - A Batch Number
+   - An Expiry Date
+   - An Item Name (usually large text) and its description (usually smaller text below it)
+3. Make sure all images are of the same medicine. If they show different medicines or mixed products, consider it an anomaly.
 
 Reply only in JSON:
 {
@@ -21,7 +39,8 @@ Reply only in JSON:
 
 
 
-image_detection_prompt = """
+
+image_detection_prompt3 = """
 You are an AI that analyzes images of medicine packaging.
 
 Your goal is to extract important and structured information from the images.
@@ -32,17 +51,16 @@ Please do the following:
    - Look for text like "Batch No", "Lot", "Expiry", "Exp", or "Use by".
    - It's okay if it's partially visible, as long as it clearly refers to batch or expiry.
 
-2. **Identify image(s) that can be used to count the quantity of the medicine.**
-
+2. Identify image(s) that can be used to count the quantity of the medicine.
+    - Look for images that show the number of packages, boxes, or bottles.
 
 3. **Extract the full item_name of the medicine:**
-   - This must include:
+   - This *MUST* include:
      - **Medicine name**
      - **Active ingredient**, if available (e.g., sodium, HCl, etc.)
      - **Dosage strength** (e.g., "500 mg", "40 mg/2 ml") — required
      - **Form** (e.g., tablet, capsule, injection, syrup, cream) — required
    - Expand short terms: "inj" = "injection", "cap" = "capsule", etc.
-   - If some info is unclear but can be inferred (e.g., from layout or label), it's okay to complete it.
 
 Examples of valid item_name:
    - "Paracetamol 500 mg tablet"
@@ -58,6 +76,95 @@ Only respond in this JSON format:
   "item_name": "string"
 }
 """
+
+image_detection_prompt4_fixed = """
+You are an AI assistant that analyzes images of medicine packaging.
+
+Your task is to extract structured information from one or more images.
+
+Please follow these steps:
+
+1. **Detect images that contain Batch Number and Expiry Date:**
+   - Look for any text like "Batch No", "Lot", "Expiry", "Exp", "Use by", etc.
+   - Partial visibility is acceptable as long as the meaning is clear.
+
+2. **Identify images that can be used to detect medicine quantity:**
+   - Look for packaging that shows quantity: blister packs, bottles, boxes, strips, etc.
+
+3. **Extract the full item_name of the medicine from the images:**
+   The `item_name` *must* include the following elements:
+   - **Medicine name**
+   - **Active ingredient(s)** (e.g., sodium, HCl) — if visible
+   - **Dosage strength** (e.g., "500 mg", "40 mg/2 ml") — **required**
+   - **Form** (e.g., tablet, capsule, injection, syrup, cream) — **required**
+
+   Common abbreviations and their expansions:
+   - "inj" = "injection"
+   - "cap", "caps", "kapsul", "capsule" = "capsule"
+   - "tab", "tablet" = "tablet"
+   - Expand all abbreviations to their full form in English.
+   - Translate or normalize other languages if needed (e.g., "kapsul" = "capsule").
+
+**Examples of valid item_name:**
+   - "Paracetamol 500 mg tablet"
+   - "Repacor Parecoxib sodium 40 mg injection"
+   - "Amoxicillin trihydrate 250 mg capsule"
+   - "Salbutamol 2 mg/5 ml syrup"
+
+**Your response must follow this exact JSON format:**
+
+{
+  "batch_and_expiry_image": [image_indices],
+  "quantity_detection_images": [image_indices],
+  "item_name": "string"
+}
+"""
+
+image_detection_prompt = """
+You are an AI assistant that analyzes images of medicine packaging.
+
+Your task is to extract structured information from one or more images.
+
+Please follow these steps:
+
+1. **Detect images that contain Batch Number and Expiry Date:**
+   - Look for any text like "Batch No", "Lot", "Expiry", "Exp", "Use by", etc.
+   - Partial visibility is acceptable as long as the meaning is clear.
+   - **Important: Only include valid image indexes. Indexing starts from 0.**
+   - For example, if there are 4 images, valid indexes are 0, 1, 2, and 3.
+
+2. **Identify images that can be used to detect medicine quantity:**
+   - Look for packaging that shows quantity: blister packs, bottles, boxes, strips, etc.
+   - Again, only use valid indexes from 0 to N-1 where N is the number of input images.
+
+3. **Extract the full item_name of the medicine from the images:**
+   The `item_name` *must* include the following elements:
+   - **Medicine name**
+   - **Active ingredient(s)** (e.g., sodium, HCl) — if visible
+   - **Dosage strength** (e.g., "500 mg", "40 mg/2 ml") — **required**
+   - **Form** (e.g., tablet, capsule, injection, syrup, cream) — **required**
+
+   Expand abbreviations and normalize terminology:
+   - "inj" = "injection"
+   - "cap", "caps", "kapsul", "capsule" = "capsule"
+   - "tab", "tablet" = "tablet"
+   - Translate or normalize terms in other languages to English
+
+**Examples of valid item_name:**
+   - "Paracetamol 500 mg tablet"
+   - "Repacor Parecoxib sodium 40 mg injection"
+   - "Amoxicillin trihydrate 250 mg capsule"
+   - "Salbutamol 2 mg/5 ml syrup"
+
+**Return your response strictly in the following JSON format:**
+
+{
+  "batch_and_expiry_image": [list of valid image indexes],
+  "quantity_detection_images": [list of valid image indexes],
+  "item_name": "string"
+}
+"""
+
 
 image_detection_prompt1 = """
 You are an AI that analyzes valid medicine packaging images.
