@@ -36,9 +36,9 @@ async def process_images(images: List[UploadFile] = File(...)):
             pil_images.append(pil_image)
         
         # # Tambahkan tracing di sini
-        with tracing_v2_enabled(project_name=LANGSMITH_PROJECT):
-             result = run_pipeline(pil_images)
-            #result = run_pipeline(pil_images)
+        # with tracing_v2_enabled(project_name=LANGSMITH_PROJECT):
+        #     result = run_pipeline(pil_images)
+            result = run_pipeline(pil_images)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"ERROR NO IMAGES UPLOADED or Internal server error: {str(e)}")

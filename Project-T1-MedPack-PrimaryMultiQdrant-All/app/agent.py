@@ -35,7 +35,6 @@ def run_anomaly_check(images) -> AnomalyResult:
     
     response = llm.invoke(messages)
     parsed = anomaly_parser.parse(response.content)
-    print("ANOMALY PARSED:", parsed)
     return AnomalyResult(**parsed)
 
 def run_image_detection(images) -> DetectionResult:
@@ -44,7 +43,6 @@ def run_image_detection(images) -> DetectionResult:
     
     response = llm.invoke(messages)
     parsed = detection_parser.parse(response.content)
-    print("DETECTION PARSED:", parsed)
     return DetectionResult(**parsed)
 
 def run_output_formatting(anomaly_result: AnomalyResult, detection_result: DetectionResult = None) -> FinalOutput:
