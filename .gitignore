@@ -47,3 +47,4 @@ Project-T1-MedPack-PrimaryAgent-MultiAgent-Qdrant/.env
 /Project-T1-MedPack-PrimaryAgent-MultiAgent-Qdrant-FastAPI/medpack
 /Project-T1-MedPack-PrimaryAgent-MultiAgent-Qdrant-FastAPI/medpack
 /Project-T1-MedPack-PrimaryMultiQdrant-All/venv
+*.zip
