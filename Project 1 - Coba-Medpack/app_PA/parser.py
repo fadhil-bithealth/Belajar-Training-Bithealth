@@ -1,0 +1,4 @@
+from langchain.output_parsers import PydanticOutputParser
+from app.schema import PrimaryAgentOutput
+
+primary_agent_parser = PydanticOutputParser(pydantic_object=PrimaryAgentOutput)

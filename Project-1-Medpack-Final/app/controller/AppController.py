@@ -5,7 +5,7 @@ from typing import List
 from PIL import Image
 import io
 from langchain.callbacks import tracing_v2_enabled
-from app.controller.PipelineController_Lab import run_pipeline
+from app.controller.PipelineController import run_pipeline
 from config import resources
 from dotenv import load_dotenv
 load_dotenv()

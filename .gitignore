@@ -50,3 +50,6 @@ Project-T1-MedPack-PrimaryAgent-MultiAgent-Qdrant/.env
 *.zip
 /FastAPI/venv - Copy
 /FastAPI/assets - Copy
+/fadhil-bithealth Belajar-Training-Bithealth main Project-T1-Final/venv
+/Project 1 - Coba-Medpack/venv
+/Project-1-Medpack-Final/venv

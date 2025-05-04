@@ -11,7 +11,7 @@ from langchain.output_parsers import PydanticOutputParser
 from app.utils.prompts import get_item_selection_prompt
 from PIL import Image
 from config import resources
-from app.schemas.schemas import ItemMatch
+
 
 # LLM, Qdrant, embedding model initialization
 llm = resources.llm
@@ -20,14 +20,11 @@ embedding_model = resources.embedding_model
 client = resources.client
 
   
-import re
-
 def normalize_item_name(item_name: str) -> str:
     """
-    Ambil kata pertama (brand name), kata yang mengandung angka atau satuan seperti mg/ml, 
-    dan bentuk obat (form) dalam versi pendek.
+    Ambil 1–2 kata pertama sebagai brand name dan bentuk obat (form) dalam versi pendek.
+    Menangani sinonim bentuk obat (termasuk Bahasa Indonesia).
     """
-
     form_map = {
         "tablet": "tab", "tab": "tab", "tablets": "tab",
         "capsule": "cap", "cap": "cap", "caps": "cap", "kapsul": "cap",
@@ -36,9 +33,12 @@ def normalize_item_name(item_name: str) -> str:
         "cream": "cream", "krim": "cream",
         "drop": "drop", "drops": "drop", "tetes": "drop",
         "suspension": "susp", "susp": "susp", "suspensi": "susp",
+        
+        # powder forms
         "powder": "pwd", "serbuk": "pwd", "serbuk oral": "pwd",
         "oral powder": "pwd", "sach": "pwd", "sachet": "pwd", 
         "serbuk oral sach": "pwd", "oral sachet": "pwd", "serbuk sachet": "pwd",
+        
         "granule": "gran", "granules": "gran", "granul": "gran",
         "gel": "gel",
         "ointment": "oint", "salep": "oint",
@@ -49,24 +49,20 @@ def normalize_item_name(item_name: str) -> str:
         "lozenge": "loz", "isap": "loz"
     }
 
+
     words = item_name.split()
-    brand_name = words[0]
+    brand_name = " ".join(words[:1]) if len(words) >= 2 else words[0]
 
-    # Cari kata yang mengandung angka atau satuan umum seperti mg, ml, IU, dll
-    dose_words = [w for w in words if re.search(r'\d', w) or re.match(r'^\d*(mg|ml|iu|mcg)$', w.lower())]
-
-    # Normalisasi form
+    # Normalisasi dan mapping form
     form = next(
         (form_map[w.lower()] for w in words if w.lower() in form_map),
         None
     )
 
-    parts = [brand_name] + dose_words
     if form:
-        parts.append(form)
-
-    return " ".join(parts).strip()
-
+        return f"{brand_name} {form}".strip()
+    else:
+        return brand_name.strip()
 
 # --- Main Runner ---
 def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
@@ -105,6 +101,9 @@ def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
         item_name = result.get("detection_result", {}).get("item_name", None)
         print("Item Name:", item_name)
         query_for_rag = str(item_name)
+        first_words = " ".join(str(item_name).split()[:2]) if item_name else ""
+        last_words = " ".join(str(item_name).split()[:2]) if item_name else ""
+        query_for_search = first_words + " " + last_words
         normalized_query = normalize_item_name(item_name)  # atau detection_output["short_name"]
         print("Normalized Query:", normalized_query)
 
@@ -126,6 +125,11 @@ def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
                 results.append({"item_name": item_name, "item_code": item_code})
             
             print("Search Results:", search_result)
+
+            class ItemMatch(BaseModel):
+                item_name: Optional[str] = None
+                item_code: Optional[str] = None
+
             # Step 2: Create output parser
             output_parser = PydanticOutputParser(pydantic_object=ItemMatch)
 
@@ -138,7 +142,7 @@ def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
             print("Item List String:", item_list_str)
 
             prompt = get_item_selection_prompt(
-                item_name=normalized_query,
+                item_name=query_for_rag,
                 item_list_str=item_list_str,
                 output_parser=output_parser
             )

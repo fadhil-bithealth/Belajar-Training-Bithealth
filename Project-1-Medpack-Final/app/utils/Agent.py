@@ -24,6 +24,7 @@ from app.schemas.schemas import (
     FinalOutput,
     BatchAndExpiryResult,     # tambahkan
     QuantityResult ,
+    ItemMatch, 
     PrimaryAgentResult          # tambahkan
 )
 
@@ -43,7 +44,6 @@ def run_image_detection(images) -> DetectionResult:
     response = llm.invoke(messages)
     parsed = detection_parser.parse(response.content)
     print("DETECTION PARSED:", parsed)
-    print("DETECTION PARSED:", type(parsed))
     return DetectionResult(**parsed)
 
 def run_output_formatting(anomaly_result: AnomalyResult, detection_result: DetectionResult = None) -> FinalOutput:

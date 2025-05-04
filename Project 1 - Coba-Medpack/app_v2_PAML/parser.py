@@ -1,0 +1,6 @@
+from langchain.output_parsers import PydanticOutputParser
+from app_v2.schema import PrimaryAgentOutput, BatchNumberOutput, QuantityOutput
+
+primary_agent_parser = PydanticOutputParser(pydantic_object=PrimaryAgentOutput)
+batch_and_expiry_parser = PydanticOutputParser(pydantic_object=BatchNumberOutput)
+quantity_parser = PydanticOutputParser(pydantic_object=QuantityOutput)

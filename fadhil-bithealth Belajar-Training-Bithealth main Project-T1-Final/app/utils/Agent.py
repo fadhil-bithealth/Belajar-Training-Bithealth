@@ -15,17 +15,20 @@ from app.utils.parser import (
     final_parser,
     batch_and_expiry_parser,  # tambahkan
     quantity_parser,
-    output_parser           # tambahkan
+    output_parser,
+    primary_parser        # tambahkan
 )
-from config.resources import llm
+from config.resources import llm, llm_quantity
 from app.schemas.schemas import (
     AnomalyResult, 
     DetectionResult, 
     FinalOutput,
     BatchAndExpiryResult,     # tambahkan
     QuantityResult ,
-    PrimaryAgentResult          # tambahkan
+    PrimaryAgentResult,
+    UnifiedResult        # tambahkan
 )
+
 
 def run_anomaly_check(images) -> AnomalyResult:
     messages = [HumanMessage(content=[
@@ -43,8 +46,16 @@ def run_image_detection(images) -> DetectionResult:
     response = llm.invoke(messages)
     parsed = detection_parser.parse(response.content)
     print("DETECTION PARSED:", parsed)
-    print("DETECTION PARSED:", type(parsed))
     return DetectionResult(**parsed)
+
+def run_primary_detection(images) -> UnifiedResult:
+    messages = [HumanMessage(content=[
+        {"type": "text", "text": primary_agent_prompt}] + images)]
+    
+    response = llm.invoke(messages)
+    parsed = primary_parser.parse(response.content)
+    print("DETECTION PARSED:", parsed)
+    return DetectionResult(**parsed)    
 
 def run_output_formatting(anomaly_result: AnomalyResult, detection_result: DetectionResult = None) -> FinalOutput:
     messages = [HumanMessage(content=[{
@@ -68,24 +79,6 @@ def run_output_formatting(anomaly_result: AnomalyResult, detection_result: Detec
     )
 
 # NEW: Tambahan dua fungsi baru
-
-def run_primary_agent(images) -> PrimaryAgentResult:
-    messages = [HumanMessage(content=[
-        {"type": "text", "text": primary_agent_prompt}] + images)]
-    
-    response = llm.invoke(messages)
-    try:
-        print("RESPONSE:", response)
-        parsed = output_parser.parse(response.content)
-        return PrimaryAgentResult(**parsed)
-    except Exception as e:
-        print("PARSING ERROR:", e)
-        print("RESPONSE:", response)
-        print("RESPONSE CONTENT:", response.content)
-    raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
-
-
-
 def run_batch_and_expiry_agent(images) -> BatchAndExpiryResult:
     messages = [HumanMessage(content=[
         {"type": "text", "text": batch_expiry_prompt}] + images)]
@@ -105,7 +98,7 @@ def run_quantity_agent(images) -> QuantityResult:
     messages = [HumanMessage(content=[
         {"type": "text", "text": quantity_prompt}] + images)]
     
-    response = llm.invoke(messages)
+    response = llm_quantity.invoke(messages)
     parsed = quantity_parser.parse(response.content)
     return QuantityResult(**parsed)
 

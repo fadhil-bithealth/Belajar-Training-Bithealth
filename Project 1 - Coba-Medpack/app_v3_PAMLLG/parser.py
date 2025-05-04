@@ -1,0 +1,7 @@
+from langchain.output_parsers import PydanticOutputParser
+from app_v3_PAMLLG.schema import PrimaryAgentOutput, BatchNumberOutput, QuantityOutput, ItemMatch
+
+primary_agent_parser = PydanticOutputParser(pydantic_object=PrimaryAgentOutput)
+batch_and_expiry_parser = PydanticOutputParser(pydantic_object=BatchNumberOutput)
+quantity_parser = PydanticOutputParser(pydantic_object=QuantityOutput)
+output_parser = PydanticOutputParser(pydantic_object=ItemMatch)

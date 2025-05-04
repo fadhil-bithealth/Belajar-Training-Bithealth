@@ -272,7 +272,7 @@ Follow these strict instructions carefully:
 ---
 
 **Respond strictly in the following JSON format**:
-```json
+
 {
   "quantity": int  // Total number of verified medicine packages.
 }

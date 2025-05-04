@@ -104,7 +104,11 @@ def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
         # Jika tidak anomaly, cari item_id dari item_name
         item_name = result.get("detection_result", {}).get("item_name", None)
         print("Item Name:", item_name)
-        query_for_rag = str(item_name)
+        rag_query = item_name
+        print("Rag query:", rag_query)
+        first_word = item_name.split()[1]
+        print("first_word:", first_word)
+        query_for_search_first = first_word
         normalized_query = normalize_item_name(item_name)  # atau detection_output["short_name"]
         print("Normalized Query:", normalized_query)
 
@@ -116,8 +120,16 @@ def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
                 query_vector=item_name_embedding,
                 limit=25,
             )
+
+            item_name_embedding = embedding_model.embed_query(query_for_search_first)
+            search_result_2 = client.search(
+                collection_name="item_collection",
+                query_vector=item_name_embedding,
+                limit=25,
+            )
             # Step 3: Ambil item_name dan item_code dari hasil pencarian
             results = []
+            result_2 = []
     # Step 1: Define schema as a class
             for hit in search_result:
                 payload = hit.payload
@@ -125,20 +137,38 @@ def run_pipeline(pil_images: List[Image.Image]) -> FinalOutput:
                 item_code = payload.get("item_code", "Unknown")
                 results.append({"item_name": item_name, "item_code": item_code})
             
-            print("Search Results:", search_result)
+            for hit in search_result_2:
+                payload = hit.payload
+                item_name = payload.get("item_name", "Unknown")
+                item_code = payload.get("item_code", "Unknown")
+                result_2.append({"item_name": item_name, "item_code": item_code})
+            
+            print("###########################################################/n")
             # Step 2: Create output parser
             output_parser = PydanticOutputParser(pydantic_object=ItemMatch)
 
-            # Format list of items
+            # # Format list of items
+            # item_list_str = "\n".join([
+            #     f"{i+1}. {item['item_name']} (item_code: {item['item_code']})"
+            #     for i, item in enumerate(results)
+            # ])
+
+            combined_results = {}
+            for item in results + result_2:
+                item_code = item.get("item_code", "Unknown")
+                if item_code not in combined_results:
+                    combined_results[item_code] = item  # Simpan hanya yang pertama
+            unique_results = list(combined_results.values())
+
             item_list_str = "\n".join([
                 f"{i+1}. {item['item_name']} (item_code: {item['item_code']})"
-                for i, item in enumerate(results)
+                for i, item in enumerate(unique_results)
             ])
-
-            print("Item List String:", item_list_str)
-
+            print("item_name LLM :", item_name)
+            print("Item List String:/n", item_list_str)
+            print("RAG Query : ", rag_query)
             prompt = get_item_selection_prompt(
-                item_name=normalized_query,
+                item_name=rag_query,
                 item_list_str=item_list_str,
                 output_parser=output_parser
             )

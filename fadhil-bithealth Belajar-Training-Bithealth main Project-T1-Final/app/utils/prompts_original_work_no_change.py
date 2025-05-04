@@ -1,9 +1,23 @@
 # app/prompts.py
 
 from app.utils.parser import final_parser
+anomaly_check_prompt2 = """
+You are an AI that reviews medicine packaging images.
 
+Given one or more images:
+1. Determine if each image is a medicine product image.
+2. Check if the combination of images provides:
+   - Batch Number
+   - Expiry Date
+   - Item Name (the usually big text) and description (small text) its below
+3. Check that all images depict only one kind of medicine. If an image contains multiple medicines, or different medicines across images, it's an anomaly.
 
-###########################################################
+Reply only in JSON:
+{
+  "is_anomaly": true or false
+}
+"""
+
 anomaly_check_prompt = """
 You are an AI that reviews medicine packaging images.
 
@@ -22,117 +36,11 @@ Reply only in JSON:
 }
 """
 
-image_detection_prompt = """
-You are an AI assistant that analyzes images of medicine packaging.
-Your task is to extract structured information from one or more images.
-
-Please follow these steps:
-
----
-
-1. **Detect images that contain Batch Number and Expiry Date:**
-   - Look for any text like "Batch No", "Lot", "Expiry", "Exp", "Use by", etc.
-   - Partial visibility is acceptable as long as the meaning is clear.
-   - **Only include valid image indexes. Indexing starts from 0.**
-   - For example, if there are 4 images, valid indexes are 0, 1, 2, and 3.
-
----
-
-2. **Identify the minimum set of images needed to detect the total quantity of medicine:**
-   - Quantity can be estimated from packaging forms like blister packs, stacked boxes, strips, bottles, etc.
-   - You **must include at least 2 different images** to cover different angles (e.g. top and side) or complementary perspectives.
-   - Only include more than 2 if they are all required to confidently determine quantity.
-   - Do not include all available images unless absolutely necessary.
-
----
-
-3. **Extract the full item_name of the medicine from the images:**
-   The `item_name` *must* include the following elements:
-   - **Medicine name**
-   - **Active ingredient(s)** (e.g., sodium, HCl) — if visible
-   - **Dosage strength** (e.g., "500 mg", "40 mg/2 ml") — **required**
-   - **Form** (e.g., tablet, capsule, injection, syrup, cream) — **required**
-
-   Normalize and expand terminology:
-   - "inj" → "injection"
-   - "cap", "caps", "kapsul", "capsule" → "capsule"
-   - "tab", "tablet" → "tablet"
-   - Translate or normalize terms in other languages into English.
-
----
-
-**Examples of valid item_name:**
-   - "Paracetamol 500 mg tablet"
-   - "Repacor Parecoxib sodium 40 mg injection"
-   - "Amoxicillin trihydrate 250 mg capsule"
-   - "Salbutamol 2 mg/5 ml syrup"
-
----
-
-**Return your response strictly in the following JSON format:**
-
-```json
-{
-  "batch_and_expiry_image": [list of valid image indexes],
-  "quantity_detection_images": [list of valid image indexes],
-  "item_name": "string"
-}
-```
-"""
-
-final_output_prompt = (
-    "You are formatting the final output. Given anomaly check and detection data, generate this format:\n\n"
-    + final_parser.get_format_instructions()
-)
-
-# Tambahkan 2 prompt baru
-batch_expiry_prompt = """
-You are an expert AI that reads and extracts the batch number and expiry date from a medicine packaging image.
-
-Given the image(s), your task is to extract the following details:
-
-1. **Batch Number** (This can appear as "Batch No", "Lot Number", or simply "Lot").
-2. **Expiry Date** (This can appear as "Expiry Date", "Expiry", "Exp", "Exp. Date", "Expires on", "Use by", "Date of Expiry", "Best Before", or "Best Before End").
-   - If the expiry date does not contain a day, assume the day is "01".
-   - Ensure that the format of the expiry date is **DD/MM/YYYY** (i.e., Day/Month/Year).
-   - If the date is ambiguous or missing a specific part (like day, month, or year), return a valid default with Day as "01".
-
-**Important Notes:**
-- Always return the **expiry date in the format DD/MM/YYYY**, regardless of the information provided.
-- If no day is specified, set the day as "01".
-- Be sure to capture the correct batch number and expiry information from the visible text.
-
-Respond strictly in the following JSON format:
-{
-  "batch_number": "string",  # This should be the batch number or lot number found in the image.
-  "expiry_date": "string"  # This should be the expiry date in the format DD/MM/YYYY, where DD is "01" if not provided.
-}
-"""
-
-
-anomaly_check_prompt2 = """
-You are an AI that reviews medicine packaging images.
-
-Given one or more images:
-1. Determine if each image is a medicine product image.
-2. Check if the combination of images provides:
-   - Batch Number
-   - Expiry Date
-   - Item Name (the usually big text) and description (small text) its below
-3. Check that all images depict only one kind of medicine. If an image contains multiple medicines, or different medicines across images, it's an anomaly.
-
-Reply only in JSON:
-{
-  "is_anomaly": true or false
-}
-"""
 
 
 
 
-
-
-image_detection_promptzz = """
+image_detection_prompt3 = """
 You are an AI that analyzes images of medicine packaging.
 
 Your goal is to extract important and structured information from the images.
@@ -169,7 +77,7 @@ Only respond in this JSON format:
 }
 """
 
-image_detection_prompts = """
+image_detection_prompt4_fixed = """
 You are an AI assistant that analyzes images of medicine packaging.
 
 Your task is to extract structured information from one or more images.
@@ -212,8 +120,50 @@ Please follow these steps:
 }
 """
 
+image_detection_prompt = """
+You are an AI assistant that analyzes images of medicine packaging.
 
+Your task is to extract structured information from one or more images.
 
+Please follow these steps:
+
+1. **Detect images that contain Batch Number and Expiry Date:**
+   - Look for any text like "Batch No", "Lot", "Expiry", "Exp", "Use by", etc.
+   - Partial visibility is acceptable as long as the meaning is clear.
+   - **Important: Only include valid image indexes. Indexing starts from 0.**
+   - For example, if there are 4 images, valid indexes are 0, 1, 2, and 3.
+
+2. **Identify images that can be used to detect medicine quantity:**
+   - Look for packaging that shows quantity: blister packs, bottles, boxes, strips, etc.
+   - Again, only use valid indexes from 0 to N-1 where N is the number of input images.
+
+3. **Extract the full item_name of the medicine from the images:**
+   The `item_name` *must* include the following elements:
+   - **Medicine name**
+   - **Active ingredient(s)** (e.g., sodium, HCl) — if visible
+   - **Dosage strength** (e.g., "500 mg", "40 mg/2 ml") — **required**
+   - **Form** (e.g., tablet, capsule, injection, syrup, cream) — **required**
+
+   Expand abbreviations and normalize terminology:
+   - "inj" = "injection"
+   - "cap", "caps", "kapsul", "capsule" = "capsule"
+   - "tab", "tablet" = "tablet"
+   - Translate or normalize terms in other languages to English
+
+**Examples of valid item_name:**
+   - "Paracetamol 500 mg tablet"
+   - "Repacor Parecoxib sodium 40 mg injection"
+   - "Amoxicillin trihydrate 250 mg capsule"
+   - "Salbutamol 2 mg/5 ml syrup"
+
+**Return your response strictly in the following JSON format:**
+
+{
+  "batch_and_expiry_image": [list of valid image indexes],
+  "quantity_detection_images": [list of valid image indexes],
+  "item_name": "string"
+}
+"""
 
 
 image_detection_prompt1 = """
@@ -265,6 +215,34 @@ Reply only in JSON:
 
 """
 
+final_output_prompt = (
+    "You are formatting the final output. Given anomaly check and detection data, generate this format:\n\n"
+    + final_parser.get_format_instructions()
+)
+
+# Tambahkan 2 prompt baru
+batch_expiry_prompt = """
+You are an expert AI that reads and extracts the batch number and expiry date from a medicine packaging image.
+
+Given the image(s), your task is to extract the following details:
+
+1. **Batch Number** (This can appear as "Batch No", "Lot Number", or simply "Lot").
+2. **Expiry Date** (This can appear as "Expiry Date", "Expiry", "Exp", "Exp. Date", "Expires on", "Use by", "Date of Expiry", "Best Before", or "Best Before End").
+   - If the expiry date does not contain a day, assume the day is "01".
+   - Ensure that the format of the expiry date is **DD/MM/YYYY** (i.e., Day/Month/Year).
+   - If the date is ambiguous or missing a specific part (like day, month, or year), return a valid default with Day as "01".
+
+**Important Notes:**
+- Always return the **expiry date in the format DD/MM/YYYY**, regardless of the information provided.
+- If no day is specified, set the day as "01".
+- Be sure to capture the correct batch number and expiry information from the visible text.
+
+Respond strictly in the following JSON format:
+{
+  "batch_number": "string",  # This should be the batch number or lot number found in the image.
+  "expiry_date": "string"  # This should be the expiry date in the format DD/MM/YYYY, where DD is "01" if not provided.
+}
+"""
 
 quantity_prompt4 = """
 You are an expert AI trained to estimate the **total quantity** of medicine packages (e.g., boxes, blisters, bottles, ampoules) from **multiple images** taken from different angles (**top**, **side**, **front**, **back**).
@@ -308,11 +286,11 @@ Task: Determine the exact total count of individual medicine packages present in
 
 Context:
 
-You will be given multiple images showing the same stack(s) of medicine packages from different perspectives.
+You will be given multiple images (e.g., 3 images) showing the same stack(s) of medicine packages from different perspectives.
 These perspectives include:
 - A Top view (to understand the row and column arrangement or layout).
 - One or more Side views (e.g., from the right, left, or front, to determine the height of the stacks).
-- The medicine is always on the center of the image(s)
+- [Add any other relevant views if provided].
 
 The medicine packages are stacked, meaning one package can be placed on top of another.
 
@@ -352,6 +330,37 @@ Instructions:
 {
   "quantity": int  // Total number of verified medicine packages.
 } """
+
+
+
+# prompts/item_selection_prompt.py
+
+# def get_item_selection_prompt(item_name: str, item_list_str: str, output_parser) -> str:
+#     return f"""
+# You are a product classifier AI. Your task is to select the most relevant inventory item based on a user's query about a medical product.
+
+# ### Instructions:
+# 1. Match the item that best corresponds to the query, focusing on:
+#    - Product name (e.g., "NARFOZ", "PARACETAMOL")
+#    - Dosage (e.g., "4mg", "500mg", "2ml", "4MG/2ML")
+#    - Form of medicine (e.g., "Injection", "Tablet", "Syrup")
+
+# 2. The match does not have to be exact, but should be semantically and contextually relevant.
+#    - For example, "4MG/2ML injection" can match queries like "narfoz injection 4 mg", "4mg vial", or "narfoz ampoule".
+#    - Allow variations in formatting (e.g., "mg", "MG", "4 mg", "4MG", or even "4 milligram").
+
+# 3. Avoid selecting items that contain "/in" or "/js" in their names, unless they are the only available options.
+
+# 4. Return a JSON object
+# ### User Query:
+# {item_name}
+
+# ### List of Retrieved Items (from vector search):
+# {item_list_str}
+
+# ### Your Answer:
+# """
+
 
 def get_item_selection_prompt(item_name: str, item_list_str: str, output_parser) -> str:
     return f"""

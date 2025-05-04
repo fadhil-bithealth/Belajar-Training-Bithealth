@@ -6,6 +6,7 @@ from PIL import Image
 import io
 from langchain.callbacks import tracing_v2_enabled
 from app.controller.PipelineController_Lab import run_pipeline
+from app.controller.PipelineController_Lab_Agent import run_pipeline_agent
 from config import resources
 from dotenv import load_dotenv
 load_dotenv()
@@ -44,6 +45,28 @@ class AppController:
             # # Tambahkan tracing di sini
             with tracing_v2_enabled(project_name=os.getenv("LANGSMITH_PROJECT")):
                 result = run_pipeline(pil_images)
+            return result
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        
+        
+    async def process_images_agent_multi(self, images: List[UploadFile] = File(...)):
+        if not images or len(images) == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="No images uploaded. Please upload at least one image."
+            )
+        
+        try:
+            pil_images = []
+            for image in images:
+                content = await image.read()
+                pil_image = Image.open(io.BytesIO(content)).convert("RGB")
+                pil_images.append(pil_image)
+            
+            # # Tambahkan tracing di sini
+            with tracing_v2_enabled(project_name=os.getenv("LANGSMITH_PROJECT")):
+                result = run_pipeline_agent(pil_images)
             return result
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
