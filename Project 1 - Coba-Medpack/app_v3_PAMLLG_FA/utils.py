@@ -50,7 +50,7 @@ def extract_med_info(query: str):
     # Variabel D: Dosage pattern (menangkap format umum dosis obat)
     dosage_pattern = r'\b\d+(?:\.\d+)?\s?(mg|mcg|g|ml)\b(?:\s*/\s*\d+(?:\.\d+)?\s?(mg|mcg|g|ml)\b)?'
     match = re.search(dosage_pattern, query.lower())
-    D = match.group(0) if match else None
+    D = match.group(0) if match else ""
 
     return {
         "A": A,

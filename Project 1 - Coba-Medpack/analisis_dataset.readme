@@ -1,0 +1,134 @@
+
+
+Note 5/5/2025
+1. Grouping
+2. Selesaikan 1 problem terlebih dahulu (misal quantity nya kebanyakan atau kekurang --> pada bagian apa ?)
+3. llm bisa menghandle image processing | hardcode -> processing_image (?) | validate
+4. Prompt --> lebih general 
+5. Prompting lebih ringkas --> Jangan terlalu banyak aturan --> LLM nanti halu /bias 
+
+Analisiis Gambar
+
+1. Terdapat elemen lain seperti karet gelang dll
+2. Model perlu mampu menghitung jumlah paket meskipun sebagian tersembunyi ()
+3. Pertimbangkan untuk menggunakan teknik augmentasi data (misalnya, rotasi, perubahan skala, penyesuaian warna) untuk memperluas dataset dan membuat model lebih robust.
+4. Buat deskripsi generik tentang latar belakang yang umum dalam gambar (rak penyimpanan, kotak biru berlubang). untuk tidak terlalu terdistraksi oleh elemen latar belakang.
+5. Sudut Pengambilan: Sudut pengambilan gambar bervariasi, ada yang langsung menghadap depan paket, ada yang dari samping, dan ada yang dari atas. Ini penting untuk memastikan model dapat mengenali obat dari berbagai perspektif.
+
+
+
+PROSES GEMINI STUDIO 
+
+Input and Preprocessing:
+Input: Image of medication packages (e.g., JPEG, PNG).
+1. Image Enhancement
+2. Resizing: Resize the image to a standard resolution (e.g., 600x400 pixels) to ensure consistent processing.
+3. Noise Reduction: Apply a denoising filter (e.g., Gaussian blur) to reduce noise and improve text recognition.
+4. Contrast Enhancement: Use techniques like histogram equalization or adaptive histogram equalization (CLAHE) to improve contrast and make text more readable.
+
+
+---------------------------------------------------------------------------
+
+Permasalahan 5/5/2025
+
+1. No 16 --> batch num, exp date, quantity NO RESULT
+2. No 17 --> item name, item code NO RESULT
+3. No 20 --> item name, item code NO RESULT
+3. 
+
+
+
+Input:
+You are an expert system designed to accurately count medicine packages in a set of images. The images show the same stack(s) of medicine packages from different perspectives, including a Top View and one or more Side Views. Your goal is to provide a precise count of the verified medicine packages.
+
+**Key Considerations based on Image Analysis:**
+
+*   **Image Perspective:** The images may be taken from different angles (front, side, top). Be adaptable and utilize information from all perspectives.
+
+*   **Object of Interest:** The primary object to be counted is the individual medicine package.
+
+*   **Irrelevant Elements:** Completely disregard irrelevant elements such as rubber bands, labels, background structures (e.g., metal shelves, perforated blue containers), or any other objects that are NOT medicine packages. The difference in color between the package and the background should help you distinguish them. Dont do grayscale when processing the images
+
+*   **Color Differentiation:** The background and medicine packages will always have distinct color profiles. Use this to your advantage in identifying the medicine packages.
+
+*   **Partial Occlusion:** Be aware that some packages may be partially hidden or occluded. Or stacked behind Utilize information from different perspectives to verify their existence.
+
+*   **Robustness to Variations:** Be robust to variations in lighting, scaling, color and orientation of the medicines. Consider data augmentation techniques in your internal reasoning.
+
+*   **Background Awareness:** Ignore the background and focus more on the medicine packages in the stack
+
+**Step-by-Step Process:**
+
+1.  **Top View Analysis:**
+    *   Identify the overall arrangement and layout of the medicine packages. Are they arranged in a grid ?
+    *   Determine the position of each medicine package or stack within the identified layout.
+
+2.  **Side View(s) Analysis:**
+    *   Correlate and match each package or stack to its corresponding position identified in the top view analysis.
+    *   Use the side view(s) to confirm the height and number of packages in each stack.
+    *   If any part of a package is occluded, try to confirm it with information from another available perspective.
+
+3.  **Cross-Validation and Verification:**
+    *   Cross-validate visual cues and information from all available perspectives (Top View and Side View(s)).
+    *   Ensure that each counted medicine package can be confidently and clearly verified from at least ONE perspective. **Do NOT count packages that cannot be positively verified.**
+    *   The presence of additional elements (e.g., rubber bands) is irrelevant to the overall height of the stacks.
+
+4.  **Counting and Reporting:**
+    *   After completing steps 1-3, calculate the total number of medicine packages by summing the heights of all visible and verifiable stacks.
+    *   Return the result ONLY for verified package units.
+
+**Output Instructions:**
+
+Provide the final result strictly in the following JSON format. **No other text or information should be included in your response**:
+
+```json
+{
+   "quantity": int  // Total number of VERIFIED medicine packages.
+}
+
+
+
+
+########################
+Hasil Testing 5/5/2025
+
+1. 8 --> correct
+2. 9 --> correct
+3. 10 --> correct  || quantity wrong
+4. 12 -- > correct || quantity wrong
+5. 13 --> correct (BATCH NUMBER AND EXPIRY DATE NOT DETECTED)
+6. 14 --> correct (QUANTITY WRONG)
+7. 15 --> corrrect (bn, exp NOT DETECTED, quantity = 0)
+8. 16 --> correct
+9. 17 --> wrong
+10. 18 --> correct (quantity wrong)
+11. 19 --> correct (quantity wrong)
+12. 20 --> item is not on the db (ril takdee)
+13. 21 --> correct (quantity wrong)
+14. 22 --> correct (quantity wrong)
+15. 23 --> correct
+16. 29 --> correct
+17. 33 --> correct
+18. 35 --> correct (quantity wrong)
+19. 38 --> correct
+20. 39 --> correct
+21. 42 --> correct
+22. 44 --> correct
+23. 52 --> correct
+24. 53 --> correct (quantity wrong)
+25. 54 --> correct
+26. 55 --> correct (quantity wrong)
+
+54%  --> 72%
+
+
+
+LATEST
+
+No. 14  --> Kedetek Gambar Kedua
+No. 15  --> Kelebihan 1
+No. 17  --> Mengihitung 2 Gambar (1 + 5)
+No. 21  --> X
+No. 22  --> Kebacanya 1
+No. 35  --> 
+No. 53  --> 

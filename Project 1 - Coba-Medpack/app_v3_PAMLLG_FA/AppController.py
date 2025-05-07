@@ -10,11 +10,11 @@ from langchain_core.tracers import LangChainTracer
 from langchain.callbacks import tracing_v2_enabled
 import os
 from qdrant_client import QdrantClient
-
+from app_v3_PAMLLG_FA.config import llm, llm_rag
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 LANGSMITH_PROJECT = os.getenv("LANGSMITH_PROJECT")
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=GOOGLE_API_KEY)
+#llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=GOOGLE_API_KEY)
 parser = PydanticOutputParser(pydantic_object=ItemMatch)
 client = QdrantClient(host='localhost', port=6333)
 
@@ -29,21 +29,34 @@ def process_images(image_paths):
 
     final_state = graph.invoke(initial_state)
     item_name = final_state["primary_agent_result"].get("item_name")
-    
+    print("Item Name ==> : ", item_name)
     # Variasi pencarian
     info = extract_med_info(item_name)
     first_word = upper(info["A"])
+    print("First Word ==> : ", first_word)
     last_word = upper(info["B"])
-    first_two_word = upper(f"{info['C']} {last_word}")
+    print("Last Word ==> : ", last_word)
+    first_two_word = upper(f"{info['C']}")
+    print("First Two Word ==> : ", first_two_word)
     simple_word = upper(info["D"])
+    print("Simple Word ==> : ", simple_word)
 
     results = merge_unique_results(
-        search_items_from_query(first_word, 10),
-        search_items_from_query(first_two_word, 10),
-        search_items_from_query(simple_word, 10),
+        search_items_from_query(first_word, 25),
+        search_items_from_query(first_two_word, 25),
+        search_items_from_query(simple_word, 25),
+        search_items_from_query(item_name, 25),
+
     )
 
+    print("Result =============================================> \n", type(results))
+    i = 1
+    for item in results:
+        print(f"{i}. Item Name : {item['item_name']} Item Code : {item['item_code']}")
+        i = i +1
+
     # Build prompt dan pakai LangSmith tracing
+    print("Query RAG ===> ", item_name)
     prompt = build_item_matching_prompt(item_name, results, parser)
     with tracing_v2_enabled(project_name=LANGSMITH_PROJECT):
         response = llm.invoke(prompt)
