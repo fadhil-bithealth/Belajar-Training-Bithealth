@@ -6,6 +6,7 @@ from app_v3_PAMLLG_FA.parser import primary_agent_parser, batch_and_expiry_parse
 from app_v3_PAMLLG_FA.schema import PrimaryAgentOutput, BatchNumberOutput, QuantityOutput
 from app_v3_PAMLLG_FA.config import llm
 from app_v3_PAMLLG_FA.helper import ensure_primary_result_object
+from langchain_core.output_parsers import JsonOutputParser
 
 
 
@@ -85,6 +86,8 @@ def detect_batch_and_expiry(image_paths: list[str], primary_result: dict) -> dic
     try:
         response = llm.invoke([HumanMessage(content=contents)])
         parsed = batch_and_expiry_parser.parse(response.content)
+        #parsed = json_output_parser.parse(response.content)
+
         return parsed.model_dump() 
     except Exception as e:
         print(f"LLM invocation error: {e}")

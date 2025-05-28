@@ -5,9 +5,13 @@ from app_v3_PAMLLG_FA.utils import (
     extract_med_info, upper, search_items_from_query, merge_unique_results
 )
 from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import JsonOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.tracers import LangChainTracer
 from langchain.callbacks import tracing_v2_enabled
+
+parser_json = JsonOutputParser()
+
 import os
 from qdrant_client import QdrantClient
 from app_v3_PAMLLG_FA.config import llm, llm_rag
